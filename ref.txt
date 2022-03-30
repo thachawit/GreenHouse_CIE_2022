@@ -1,0 +1,6 @@
+Automatic sunshade
+https://www.instructables.com/Automatic-Curtain-With-Arduino/
+
+Automatic watering and Fertilizing system
+https://www.instructables.com/IoT-Automatic-Plant-Watering-System/
+
