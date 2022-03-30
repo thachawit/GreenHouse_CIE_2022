@@ -1,3 +1,4 @@
 Humid_temp: DHT22
 Ultrasonic: HC-SR04
+Soil Moisture: https://www.cybertice.com/product/47/เซนเซอร์วัดความชื้นในดิน-soil-moisture-sensor-module-v1
 Soil Nutrient: soil-npk-sensor (https://www.youtube.com/watch?v=6jKEl2r0ea8)
