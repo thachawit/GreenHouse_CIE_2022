@@ -1,42 +1,44 @@
 import paho.mqtt.client as mqtt
 import mysql.connector
 
-mydb = mysql.connector.connect(
-  host="localhost",
-  user="yourusername",
-  password="yourpassword",
-  database="mydatabase"
-)
+# mydb = mysql.connector.connect(
+#   host="localhost",
+#   user="yourusername",
+#   password="yourpassword",
+#   database="mydatabase"
+# )
 
-mycursor = mydb.cursor()
+# mycursor = mydb.cursor()
+# 
+# def insert_data(h,p):
+#     sql = "INSERT INTO PLANT_POT (humidity, temperature) VALUES (%s, %s)"
+#     values = (h, p)
+#     mycursor.execute(sql, values)
+#     mydb.commit()
 
-def insert_data(message):
-    packet = message.splitline
-    humidity_val = packet[0]
-    temp_val = packet[1]
-    sql = "INSERT INTO PLANT_POT (humidity, temperature) VALUES (%s, %s)"
-    values = (humidity_val, temp_val)
-    mycursor.execute(sql, values)
-    mydb.commit()
 
-print(mycursor.rowcount, "record inserted.")
 
-MQTT_ADDRESS = '192.168.0.110'
-MQTT_USER = '12345'
+MQTT_ADDRESS = '192.168.0.102'
+MQTT_USER = 'smartfarm'
 MQTT_PASSWORD = '12345'
-MQTT_TOPIC = 'home/potplant/humidity'
+MQTT_TOPIC = 'humidity/pH/light'
 
 
 def on_connect(client, userdata, flags, rc):
     """ The callback for when the client receives a CONNACK response from the server."""
     print('Connected with result code ' + str(rc))
     client.subscribe(MQTT_TOPIC)
+    
 
 
 def on_message(client, userdata, msg):
     """The callback for when a PUBLISH message is received from the server."""
-    print(msg.topic + ' ' + str(msg.payload))
-    insert_data(msg.payload)
+    packet = str(msg.payload).split("b")
+    humidity = packet[1][1:]
+    pH = packet[2][:-1]
+    print(msg.topic + ' ' + humidity + ' ' + pH)
+   
+#     insert_data(float(humidity),float(pH))
 
 
 def main():
