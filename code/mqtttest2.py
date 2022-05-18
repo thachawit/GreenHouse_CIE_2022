@@ -14,12 +14,12 @@ def insert_data(sensor_data,topic):
     data_list = sensor_data;
     if(topic == 'humidity/temperature'):
         sql = "INSERT INTO demo (humidity, temp) VALUES (%s, %s)"
-        values = (datalist[0], datalist[1])
+        values = (float(datalist[0]), float(datalist[1]))
         mycursor.execute(sql, values)
         mydb.commit()
     if(topic == 'soil/moisture'):
         sql = "INSERT INTO demo (moisture) VALUES (%s)"
-        values = datalist[0] 
+        values = float(datalist[0]) 
         mycursor.execute(sql, values)
         mydb.commit()
         
@@ -27,7 +27,7 @@ def to_esp(client):
     sql = "SELECT status FROM SUNSHADE WHERE ID = (SELECT MAX(ID) FROM SUNSHADE)"
     result = mycursor.execute(sql)
     if(result==True): 
-        client.publish("esp8266/sunshade",result[-1])
+        client.publish("esp8266/sunshade",result)
         close_roof = "INSERT INTO SUNSHADE (status) VALUES (False)"
         mycursor.execute(close_roof)
         mydb.commit()
@@ -80,3 +80,4 @@ def main():
 if __name__ == '__main__':
     print('MQTT to InfluxDB bridge')
     main()
+
