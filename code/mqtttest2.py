@@ -5,7 +5,7 @@ mydb = mysql.connector.connect(
   host="localhost",
   user="root",
   password="raspberrypi!",
-  database="smartgarden"
+  database="smart_greenhouse"
 )
 
 mycursor = mydb.cursor()
@@ -13,12 +13,13 @@ mycursor = mydb.cursor()
 def insert_data(sensor_data,topic):
     data_list = sensor_data;
     if(topic == 'humidity/temperature'):
-        sql = "INSERT INTO demo (humidity, temp) VALUES (%s, %s)"
-        values = (float(datalist[0]), float(datalist[1]))
+        sql = "INSERT INTO ambient (humidity_level, temperature) VALUES (%s, %s)"
+        values = (float(data_list[0]), float(data_list[1]))
         mycursor.execute(sql, values)
         mydb.commit()
+        
     if(topic == 'soil/moisture'):
-        sql = "INSERT INTO demo (moisture) VALUES (%s)"
+        sql = "INSERT INTO soil_info (moisture_level) VALUES (%s)"
         values = float(datalist[0]) 
         mycursor.execute(sql, values)
         mydb.commit()
@@ -26,7 +27,7 @@ def insert_data(sensor_data,topic):
 def to_esp(client):
     sql = "SELECT status FROM SUNSHADE WHERE ID = (SELECT MAX(ID) FROM SUNSHADE)"
     result = mycursor.execute(sql)
-    if(result==True): 
+    if(result=="0"): 
         client.publish("esp8266/sunshade",result)
         close_roof = "INSERT INTO SUNSHADE (status) VALUES (False)"
         mycursor.execute(close_roof)
@@ -57,6 +58,9 @@ def on_message(client, userdata, msg):
         print(topic + ' ' + humidity + ' ' + temp)
         data_list = [humidity, temp]
         insert_data(data_list,topic)
+        client.publish("esp8266/sunshade","1")
+        
+
     if(topic =='soil/moisture'):
         moisture = packet[1][1:]
         #temp = packet[2][:-1]
@@ -72,7 +76,6 @@ def main():
     mqtt_client.on_connect = on_connect
     mqtt_client.on_message = on_message
     mqtt_client.to_esp = to_esp
-
     mqtt_client.connect(MQTT_ADDRESS, 1883)
     mqtt_client.loop_forever()
 
