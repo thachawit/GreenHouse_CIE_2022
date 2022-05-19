@@ -17,7 +17,8 @@ const char* wifi_password = "0816115200p"; // Your personal network password
 const char* mqtt_server = "192.168.0.115";  // IP of the MQTT broker
 //const char* humidity_topic = "home/potplant/humidity";
 //const char* temperature_topic = "home/potplant/temperature";
-const char* smartfarm_topic = "humidity/temperature";
+const char* topic1 = "humidity/temperature";
+const char* topic2 = "soil/moisture";
 const char* mqtt_username = "smartfarm"; // MQTT username
 const char* mqtt_password = "12345"; // MQTT password
 const char* clientID = "client_smartfarm"; // MQTT client ID
@@ -145,13 +146,30 @@ void setup() {
   
 }
 
+int readMoisture(){
+  unsigned char  i;
+   int Moisture = 0; 
+   for(i=0;i<10;i++){Moisture = Moisture + analogRead(A0);}
+   Moisture = Moisture / 10; 
+
+   if(Moisture >= 530){Moisture = ((Moisture - 550)/15) + 90;}else
+   if(Moisture >= 430){Moisture = ((Moisture - 450)/10) + 80;}else
+   if(Moisture >= 130){Moisture = ((Moisture - 130)/6) + 30;}else
+   if(Moisture >=   0){Moisture = ((Moisture)/5);}
+   if(Moisture > 100){Moisture = 100;}
+   //Serial.print("Moisture: ");
+   //Serial.println(Moisture);
+   return Moisture;
+}
+
+
 void loop() {
   
   Serial.setTimeout(2000);
   
   float h = dht.readHumidity();
   float t = dht.readTemperature();
-  //float m = 
+  float m = readMoisture();
   
 //  float h = 9;
 //  float p =8;
@@ -161,15 +179,17 @@ void loop() {
   Serial.print("Temp: ");
   Serial.print(t);
   Serial.println(" C");
-
+  Serial.print("Moisture: ");
+  Serial.println(m); 
   // MQTT can only transmit strings
   String hs=String((float)h);
   String ts=String((float)t);
-  String message = hs+"b"+ts;
+  String message1 = hs+"b"+ts;
+  String message2 = String((int)m);
   // PUBLISH to the MQTT Broker (topic = Temperature, defined at the beginning)
-  if (client.publish(smartfarm_topic, String(message).c_str())) {
+  if (client.publish(topic1, String(message1).c_str())) {
     Serial.println("Temperature sent!");
-    Serial.println(message);
+    Serial.println(message1);
   }
   // Again, client.publish will return a boolean value depending on whether it succeded or not.
   // If the message failed to send, we will try again, as the connection may have broken.
@@ -177,10 +197,20 @@ void loop() {
     Serial.println("Temperature failed to send. Reconnecting to MQTT Broker and trying again");
     client.connect(clientID, mqtt_username, mqtt_password);
     delay(10); // This delay ensures that client.publish doesn't clash with the client.connect call
-    client.publish(smartfarm_topic, String(message).c_str());
+    client.publish(topic1, String(message1).c_str());
   }
-
+  //moisture
+  if (client.publish(topic2, String(message2).c_str())) {
+    Serial.println("Moisture sent!");
+    Serial.println(message2);
+  }
+  else {
+    Serial.println("Temperature failed to send. Reconnecting to MQTT Broker and trying again");
+    client.connect(clientID, mqtt_username, mqtt_password);
+    delay(10); // This delay ensures that client.publish doesn't clash with the client.connect call
+    client.publish(topic2, String(message2).c_str());
+  }
   //client.disconnect();  // disconnect from the MQTT broker
-  delay(1000);       // print new values every 1 Minute
+  delay(3000);       // print new values every 1 Minute
   client.loop();
 }
